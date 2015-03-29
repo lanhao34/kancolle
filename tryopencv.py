@@ -88,25 +88,20 @@ POS_CHANGE_SHIP	=	[(410+340*x,217+113*y) for y in xrange(3) for x in xrange(2)]
 POS_LINE_AHEAD	=	(446,185)
 POS_LINE_ABREAST=	(645,345)
 
-stype={}
-stype['战舰']=(1,2)
-stype['重巡']=(367,368,371,64,63,124,362,50,62)
-stype['轻母']=(381,384,104)
-stype['航母']=(377,378,8)
-stype['潜艇']=(163,126,236)
 
-sortno_lists = {'2-3':(	(128,),
-						(127,),
-						(123,),
-						(126, 498),
-						(236,)),
-				'3-2':(	stype['战舰'],
-						stype['重巡'],
-						stype['重巡'],
-						stype['轻母'],
-						stype['航母'],
-						stype['潜艇'])}
-exps=[(1,6),(0,0),(1,2)]
+id_lists = {'2-3':(	(1484,),
+					(243, 413, 417),
+					(148, 283, 1078),	
+					(182, 347),
+					(1085,),
+					()),
+			'3-2':(	(1507, 1401),
+					(1224, 97, 42, 256, 366, 434),
+					(1224, 97, 42, 256, 366, 434, 159, 2462),
+					(331, 303, 1117, 432),
+					(2407, 1107),
+					(2281, 2050, 347, 182))}
+exps=[(1,6),(5,5),(1,2)]
 advances={'1-5':True,'2-3':True,'3-2':False,'3-3':True}
 condition={'1-5':480,'2-3':480,'3-2':480,'3-3':480}
 POS_FORMATION	=	{'1-5':POS_LINE_ABREAST,'2-3':POS_LINE_AHEAD,'3-2':POS_LINE_AHEAD,'3-3':POS_LINE_AHEAD}
@@ -139,7 +134,7 @@ def terminate_thread(tid):
     :param thread: a threading.Thread instance
     """
 
-    exc = ctypes.py_object(SystemExit)
+    exc = ctypes.py_object(KeyboardInterrupt)
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
         ctypes.c_long(tid), exc)
     print res
@@ -152,9 +147,9 @@ def terminate_thread(tid):
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
 def click_page(page):
-	sleep(0.5)
-	mouse.click(435,450)
-	sleep(0.5)
+	sleep(2)
+	mouse.click(436,457)
+	sleep(1.5)
 	if page < 5:
 		mouse.click(516+31*page,450)
 	else:
@@ -166,7 +161,7 @@ def click_page(page):
 			page-=2
 			sleep(1)
 		mouse.click(516+31*(page+2),450)
-	sleep(0.5)
+	sleep(1.5)
 
 class AutoClick:
 	"""docstring for AutoClick"""
@@ -178,11 +173,11 @@ class AutoClick:
 		self.argv = False
 		self.mission=argv
 		self.min_expdition_time=0
-		self.t=threading.Thread(target=self.main)
-		self.t.setDaemon(True)
-		self.t.start()
-		self.tid=self.t.ident
-		# self.handle,self.tid=win32process.beginthreadex(None,0,self.main,(),0)
+		# self.t=threading.Thread(target=self.main)
+		# self.t.setDaemon(True)
+		# self.t.start()
+		# self.tid=self.t.ident
+		self.handle,self.tid=win32process.beginthreadex(None,0,self.main,(),0)
 		# print type(self.t.ident)
 
 
@@ -424,29 +419,33 @@ class AutoClick:
 
 	def onKeyboardEvent(self, event):
 		if event.Key=='F9':
-			self.argv=True
+			if self.argv:
+				self.argv=False
+			else:
+				self.argv=True
 		if event.Key=='F10':
 			if self.flag:
 				print "Press F10 to pause."
-				# win32process.ResumeThread(self.handle)
+				win32process.ResumeThread(self.handle)
 				self.flag = False
 			else:
 				print "Press F10 to continue."
-				# win32process.SuspendThread(self.handle)
+				win32process.SuspendThread(self.handle)
 				self.flag = True
 		if event.Key=='F8':
 			# terminate_thread(self.tid)
 			# sleep(0.5)
 			win32api.PostThreadMessage(win32api.GetCurrentThreadId(), win32con.WM_QUIT, 0, 0);
 		if event.Key=='F12':
-			terminate_thread(int(self.tid))
 			# win32api.CloseHandle(self.handle)
+			terminate_thread(int(self.tid))
 			# win32api.PostThreadMessage(self.tid, win32con.WM_QUIT, 0, 0);
 			print 'killed thread'
-			# self.handle,self.tid=win32process.beginthreadex(None,0,self.main,(),0)
-			self.t=threading.Thread(target=self.main)
-			self.t.setDaemon(True)
-			self.t.start()
+			self.handle,self.tid=win32process.beginthreadex(None,0,self.main,(),0)
+			# self.t=threading.Thread(target=self.main)
+			# self.t.setDaemon(True)
+			# self.t.start()
+			# self.tid=self.t.ident
 		return True
 
 	def run(self):
@@ -461,8 +460,8 @@ class AutoClick:
 		if self.mission=='exp':
 			return
 		elif self.mission in ('3-2','2-3'):
-			for i,sortno_list in enumerate(sortno_lists[self.mission]):
-				if self.ship_team1[i]<0 or self.ships_by_id[self.ship_team1[i]]['api_sortno']not in sortno_list:
+			for i,id_list in enumerate(id_lists[self.mission]):
+				if self.ship_team1[i]<0 or self.ship_team1[i]not in id_list:
 					self.change_all()
 					return
 
@@ -471,15 +470,15 @@ class AutoClick:
 		if self.mission=='exp':
 			return
 		elif self.mission in ('3-2','2-3'):
-			for i,sortno_list in enumerate(sortno_lists[self.mission]):
+			for i,id_list in enumerate(id_lists[self.mission]):
 				tmp_index=None
 				tmp_cond=0
-				for index,ship in enumerate(self.ships):
-					if ship['api_sortno'] in sortno_list and ship['api_id']<2100 \
-						and index not in set(x[1] for x in self.need_replace):
+				for ship_id in id_list:
+					ship=self.ships_by_id[ship_id]
+					if ship_id not in set(self.ship_team1) and ship['index'] not in set(x[1] for x in self.need_replace):
 						if tmp_cond<ship['api_cond']:
 							tmp_cond=ship['api_cond']
-							tmp_index=index
+							tmp_index=ship['index']
 				if tmp_index:
 					self.need_replace.append([i,tmp_index])
 
@@ -562,10 +561,6 @@ class AutoClick:
 				need_repair.add(ship['index'])
 				need_replace.add(i)
 
-		self.need_repair=zip(need_repair,empty_dock)
-		if self.need_repair:
-			return
-
 		for dock in port_api_data['api_ndock']:
 			if dock['api_ship_id'] in self.ship_team1:
 				self.max_repair_time=max(self.max_repair_time,dock['api_complete_time']/1000)
@@ -575,14 +570,13 @@ class AutoClick:
 			for i in need_replace:
 				tmp_index=None
 				tmp_cond=0
-				ship_id=self.ship_team1[i]
-				sortno_list=sortno_lists[self.mission][i]
-				for index,ship in enumerate(self.ships):
-					if ship['api_sortno'] in sortno_list and ship['api_id']<2300 and \
-						ship['api_id'] not in set(self.ship_team1)|ship_in_dock and index not in set(x[1] for x in self.need_replace):
-						if tmp_cond<ship['api_cond'] and (ship['api_cond']>self.ships_by_id[ship_id]['api_cond'] or ship_id in ship_in_dock):
+				id_list=id_lists[self.mission][i]
+				for ship_id in id_list:
+					ship=self.ships_by_id[ship_id]
+					if ship_id not in set(self.ship_team1)|ship_in_dock and ship['index'] not in set(x[1] for x in self.need_replace):
+						if tmp_cond<ship['api_cond'] and (ship['api_cond']>self.ships_by_id[self.ship_team1[i]]['api_cond'] or self.ship_team1[i] in ship_in_dock):
 							tmp_cond=ship['api_cond']
-							tmp_index=index
+							tmp_index=ship['index']
 				if tmp_index:
 					self.need_replace.append([i,tmp_index])
 
@@ -591,6 +585,8 @@ class AutoClick:
 			for ship_id in set(self.ship_team1)- {-1}- ship_in_dock:
 				if 0<self.ships_by_id[ship_id]['api_ndock_time']/1000<wait_time:
 					need_repair.add(self.ships_by_id[ship_id]['index'])
+		
+		self.need_repair=zip(need_repair,empty_dock)
 
 		self.max_repair_time-=120
 		self.min_expdition_time-=120
@@ -652,10 +648,11 @@ class AutoClick:
 						while self.min_expdition_time>time.time():
 							sleep(60)
 						sleep(60+self.min_expdition_time-time.time())
-						if match(self.screen.shot(),"setting.bmp"):
-							self.supply()
-						else:
-							self.go_main()
+					if match(self.screen.shot(),"setting.bmp"):
+						self.supply()
+					else:
+						sleep(3)
+						self.go_main()
 				elif need_check_stype:
 					self.check_stype()
 					need_check_stype=False
@@ -668,6 +665,7 @@ class AutoClick:
 						if match(self.screen.shot(),"setting.bmp"):
 							self.supply()
 						else:
+							sleep(3)
 							self.go_main()
 					else:
 						self.launch()

@@ -105,13 +105,14 @@ class ConnectionHandler:
             self.method_others()
         self.client.close()
         self.target.close()
-        self.data=json.loads(self.data.split('svdata=')[-1])
-        # path=self.path[1:]+'.txt'
-        # if not os.path.exists(os.path.split(path)[0]):
-        #     os.makedirs(os.path.split(path)[0])
-        # f=open(path,'w')
-        # f.write(self.data.split('svdata=')[-1])
-        # f.close()
+        data=self.data.split('svdata=')[-1]
+        self.data=json.loads(data)
+        path=self.path[1:]+'.txt'
+        if not os.path.exists(os.path.split(path)[0]):
+            os.makedirs(os.path.split(path)[0])
+        f=open(path,'w')
+        f.write(data)
+        f.close()
         # pprint(self.data)
         # print self.path
 
@@ -206,7 +207,8 @@ class Server(object):
                 self.read_path(path_temp)
             elif os.path.isfile(path_temp):
                 with open(path_temp) as f:
-                    self.data[('/'+path_temp)[:-4]]=json.loads(f.read())
+                    data=f.read()
+                    self.data[('/'+path_temp)[:-4]]=json.loads(data)
     def start(self):
         while 1:
             thread.start_new_thread(self.handler, self.soc.accept())
