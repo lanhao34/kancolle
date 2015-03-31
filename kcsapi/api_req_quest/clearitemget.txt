@@ -1,0 +1,1 @@
+{"api_result":1,"api_result_msg":"\u6210\u529F","api_data":{"api_material":[100,100,100,100],"api_bounus_count":1,"api_bounus":[{"api_type":1,"api_count":2,"api_item":{"api_id":7,"api_name":""}}]}}

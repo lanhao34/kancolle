@@ -1,0 +1,1 @@
+{"api_result":1,"api_result_msg":"\u6210\u529F","api_data":{"api_create_flag":1,"api_shizai_flag":1,"api_slot_item":{"api_id":4004,"api_slotitem_id":18},"api_material":[6655,9643,25015,18902,201,665,98,39],"api_type3":8,"api_unsetslot":[1896,1645,3453,1547,3811,3110,413,2541,635,3580,1660,2962,2693,3219,2050,3109,3291,2372,3934,3035,1754,3457,2655,1432,4004]}}
