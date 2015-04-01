@@ -1,21 +1,39 @@
 {
     "expedition": [
         [1, 6],
-        [0, 0],
+        [5, 6],
         [1, 2]
     ],
     "sortie": {
+        "1-1": {
+            "night": false,
+            "advance": true,
+            "formation": "LINE_AHEAD",
+            "id_lists": []
+        },
+        "1-5": {
+            "night": false,
+            "advance": true,
+            "formation": "LINE_ABREAST",
+            "id_lists": []
+        },
         "2-3": {
             "night": true,
             "advance": true,
             "formation": "LINE_AHEAD",
             "id_lists": [
                 [1484],
+                [1085],
                 [417, 413, 243],
                 [1078, 283, 148],
-                [2524, 347, 182],
-                [1085]
+                [2524, 347, 182]
             ]
+        },
+        "2-5": {
+            "night": true,
+            "advance": true,
+            "formation": "LINE_AHEAD",
+            "id_lists": []
         },
         "3-2": {
             "night": false,

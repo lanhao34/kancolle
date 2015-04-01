@@ -107,12 +107,13 @@ class ConnectionHandler:
         self.target.close()
         data=self.data.split('svdata=')[-1]
         self.data=json.loads(data)
-        path=self.path[1:]+'.txt'
-        if not os.path.exists(os.path.split(path)[0]):
-            os.makedirs(os.path.split(path)[0])
-        f=open(path,'w')
-        f.write(data)
-        f.close()
+        if self.path == "/kcsapi/api_start2":
+            path=self.path[1:]+'.txt'
+            if not os.path.exists(os.path.split(path)[0]):
+                os.makedirs(os.path.split(path)[0])
+            f=open(path,'w')
+            f.write(data)
+            f.close()
         # pprint(self.data)
         # print self.path
 

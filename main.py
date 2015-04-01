@@ -24,11 +24,6 @@ mouse = winMouse()
 dir_name = os.getcwd()
 sys.path.append(dir_name + os.sep + "img")
 
-if len(sys.argv) > 1:
-    argv = sys.argv[1]
-else:
-    argv = ''
-
 RED = [32, 32, 255]
 GREEN = [32, 200, 64]
 GRAY = [68, 68, 68]
@@ -136,24 +131,6 @@ def terminate_thread(tid):
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
 
-def click_page(page):
-    sleep(2)
-    mouse.click(436, 457)
-    sleep(1.5)
-    if page < 5:
-        mouse.click(516 + 31 * page, 450)
-    else:
-        mouse.click(516 + 31 * 4, 450)
-        sleep(1)
-        page -= 4
-        while page > 2:
-            mouse.click(516 + 31 * 4, 450)
-            page -= 2
-            sleep(1)
-        mouse.click(516 + 31 * (page + 2), 450)
-    sleep(1.5)
-
-
 class AutoClick:
 
     """docstring for AutoClick"""
@@ -162,9 +139,12 @@ class AutoClick:
         self.server = Server()
         thread.start_new_thread(self.server.start, ())
         self.orange = False
-        self.flag = False
-        self.argv = False
-        self.mission = argv
+        self.suspended = False
+        self.new_argv = ''
+        if len(sys.argv) > 1:
+            self.mission = sys.argv[1]
+        else:
+            self.mission = ''
         self.min_expdition_time = 0
         # self.t=threading.Thread(target=self.main)
         # self.t.setDaemon(True)
@@ -228,11 +208,11 @@ class AutoClick:
         flag = 0
         sleep(5)
         while 1:
-            while self.flag:
+            while self.suspended:
                 sleep(1)
             formation = True
             check_night = True
-            while flag == 0 and not self.flag:
+            while flag == 0 and not self.suspended:
                 screen = self.screen.shot()
                 if formation and check_night and match(screen, "compass.bmp"):
                     mouse.click(*POS_GO)
@@ -259,7 +239,7 @@ class AutoClick:
                     check_night = False
                     sleep(3)
                 sleep(1)
-            while flag == 1 and not self.flag:
+            while flag == 1 and not self.suspended:
                 screen = self.screen.shot()
                 if match(screen, "broken.bmp"):
                     advance = False
@@ -271,7 +251,7 @@ class AutoClick:
                     mouse.click(*POS_GO)
                     flag = 2
                 sleep(1)
-            while flag == 2 and not self.flag:
+            while flag == 2 and not self.suspended:
                 screen = self.screen.shot()
                 if match(screen, "advance.bmp"):
                     if advance:
@@ -379,7 +359,7 @@ class AutoClick:
             while not match(self.screen.shot(), "new.bmp"):
                 mouse.click(*POS_CHANGE_SORT)
                 sleep(0.2)
-            click_page(page)
+            self.click_page(page)
             mouse.click(600, 138 + row * 31)
             sleep(1)
             mouse.click(*POS_GO)
@@ -393,15 +373,15 @@ class AutoClick:
     def change_ship(self):
         mouse.click(200, 135)
         for i, ship_index in self.need_replace:
-            sleep(1.5)
+            sleep(1)
             page = ship_index / 10
             row = ship_index % 10
             mouse.click(*POS_CHANGE_SHIP[i])
-            sleep(1.5)
+            sleep(1)
             while not match(self.screen.shot(), "new.bmp"):
                 mouse.click(*POS_CHANGE_SORT)
                 sleep(0.2)
-            click_page(page)
+            self.click_page(page)
             mouse.click(450, 168 + 28 * row)
             sleep(1)
             click_time = time.time()
@@ -419,36 +399,31 @@ class AutoClick:
 
     def onKeyboardEvent(self, event):
         if event.Key == 'F9':
-            if self.argv:
-                self.argv = False
-            else:
-                self.argv = True
+            thread.start_new_thread(self.change_argv, ())
         if event.Key == 'F10':
-            if self.flag:
+            if self.suspended:
                 print "Press F10 to pause."
                 win32process.ResumeThread(self.handle)
-                self.flag = False
+                self.suspended = False
             else:
                 print "Press F10 to continue."
                 win32process.SuspendThread(self.handle)
-                self.flag = True
+                self.suspended = True
         if event.Key == 'F8':
-            # terminate_thread(self.tid)
-            # sleep(0.5)
             win32api.PostThreadMessage(
                 win32api.GetCurrentThreadId(), win32con.WM_QUIT, 0, 0)
         if event.Key == 'F12':
-            # win32api.CloseHandle(self.handle)
-            terminate_thread(int(self.tid))
-            # win32api.PostThreadMessage(self.tid, win32con.WM_QUIT, 0, 0);
             print 'killed thread'
+            self.suspended = False
+            terminate_thread(int(self.tid))
             self.handle, self.tid = win32process.beginthreadex(
                 None, 0, self.main, (), 0)
-            # self.t=threading.Thread(target=self.main)
-            # self.t.setDaemon(True)
-            # self.t.start()
-            # self.tid=self.t.ident
         return True
+
+    def change_argv(self):
+        win32process.SuspendThread(self.handle)
+        self.new_argv = raw_input("\r\nInput argument:")
+        win32process.ResumeThread(self.handle)
 
     def run(self):
         hm = pyHook.HookManager()
@@ -464,10 +439,10 @@ class AutoClick:
         elif self.mission in ('3-2', '2-3'):
             for i, id_list in enumerate(sortie[self.mission]["id_lists"]):
                 if self.ship_team1[i] < 0 or self.ship_team1[i]not in id_list:
-                    self.change_all()
+                    self.change_all_ship()
                     return
 
-    def change_all(self):
+    def change_all_ship(self):
         self.need_replace = []
         if self.mission == 'exp':
             return
@@ -481,7 +456,7 @@ class AutoClick:
                         if tmp_cond < ship['api_cond']:
                             tmp_cond = ship['api_cond']
                             tmp_index = ship['index']
-                if tmp_index!=-1:
+                if tmp_index != -1:
                     self.need_replace.append([i, tmp_index])
         if self.ships[self.need_replace[0][1]]['api_id'] == self.ship_team1[0]:
             self.need_replace = self.need_replace[1:]
@@ -501,7 +476,7 @@ class AutoClick:
             while not match(self.screen.shot(), "new.bmp"):
                 mouse.click(*POS_CHANGE_SORT)
                 sleep(0.2)
-            click_page(page)
+            self.click_page(page)
             sleep(1)
             mouse.click(450, 168 + 28 * row)
             sleep(1)
@@ -511,6 +486,25 @@ class AutoClick:
             while self.server.path != '/kcsapi/api_req_hensei/change' or self.server.time < click_time:
                 sleep(1)
         self.go_main()
+
+    def click_page(self, page):
+        sleep(1)
+        mouse.click(436, 457)
+        sleep(1)
+        if page < 5:
+            mouse.click(516 + 31 * page, 450)
+        elif page == (len(self.ships) - 1) / 10:
+            mouse.click(715, 450)
+        else:
+            mouse.click(516 + 31 * 4, 450)
+            sleep(1)
+            page -= 4
+            while page > 2:
+                mouse.click(516 + 31 * 4, 450)
+                page -= 2
+                sleep(1)
+            mouse.click(516 + 31 * (page + 2), 450)
+        sleep(1)
 
     def update_data(self):
         now_time = time.time()
@@ -629,7 +623,7 @@ class AutoClick:
         # 	self.go_main()
 
         while 1:
-            while self.flag:
+            while self.suspended:
                 sleep(1)
             screen = self.screen.shot()
             if match(screen, "expedition.bmp"):
@@ -645,10 +639,10 @@ class AutoClick:
                     self.repair()
                 elif self.need_replace:
                     self.change_ship()
-                elif self.argv or not self.mission:
-                    self.mission = raw_input("Input argument:")
+                elif self.new_argv:
+                    self.mission = self.new_argv
                     self.check_stype()
-                    self.argv = False
+                    self.new_argv = ''
                 elif self.mission == 'exp':
                     if self.min_expdition_time > time.time() - 60:
                         print time.strftime("next click: %H:%M:%S", time.localtime(self.min_expdition_time + 60))
