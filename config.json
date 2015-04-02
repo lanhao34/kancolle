@@ -9,7 +9,7 @@
             "night": false,
             "advance": true,
             "formation": "LINE_AHEAD",
-            "id_lists": []
+            "id_lists": [[828,40,9,8,1,20]]
         },
         "1-5": {
             "night": false,
@@ -22,8 +22,7 @@
             "advance": true,
             "formation": "LINE_AHEAD",
             "id_lists": [
-                [1484],
-                [1085],
+                [1484, 1085],
                 [417, 413, 243],
                 [1078, 283, 148],
                 [2524, 347, 182]
