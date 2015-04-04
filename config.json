@@ -18,7 +18,7 @@
             "id_lists": []
         },
         "2-3": {
-            "night": true,
+            "night": false,
             "advance": true,
             "formation": "LINE_AHEAD",
             "id_lists": [
