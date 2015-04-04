@@ -201,11 +201,9 @@ class AutoClick:
         flag = 0
         sleep(5)
         while 1:
-            while self.suspended:
-                sleep(1)
             formation = True
             check_night = True
-            while flag == 0 and not self.suspended:
+            while flag == 0:
                 screen = self.screen.shot()
                 if formation and check_night and match(screen, "compass.bmp"):
                     mouse.click(*POS_GO)
@@ -218,6 +216,7 @@ class AutoClick:
                     formation = False
                     sleep(20)
                 elif self.server.path == "/kcsapi/api_req_sortie/battleresult":
+                    self.server.path = ''
                     sleep(3)
                     while not match(self.screen.shot(), "next_0.bmp"):
                         sleep(0.5)
@@ -232,7 +231,7 @@ class AutoClick:
                     check_night = False
                     sleep(3)
                 sleep(1)
-            while flag == 1 and not self.suspended:
+            while flag == 1:
                 screen = self.screen.shot()
                 if match(screen, "broken.bmp"):
                     advance = False
@@ -244,7 +243,7 @@ class AutoClick:
                     mouse.click(*POS_GO)
                     flag = 2
                 sleep(1)
-            while flag == 2 and not self.suspended:
+            while flag == 2:
                 screen = self.screen.shot()
                 if match(screen, "advance.bmp"):
                     if advance:
@@ -355,11 +354,11 @@ class AutoClick:
             self.click_page(page)
             mouse.click(600, 138 + row * 31)
             sleep(1)
-            mouse.click(*POS_GO)
-            sleep(1)
-            if self.mission not in ['3-2','2-3']:
+            if self.mission not in {'3-2','2-3'}:
                 mouse.click(*POS_FAST_REPAIR)
                 sleep(1)
+            mouse.click(*POS_GO)
+            sleep(1)
             click_time = time.time()
             mouse.click(*POS_REPAIR_YES)
             while self.server.path != '/kcsapi/api_get_member/ndock' or self.server.time < click_time:
@@ -531,7 +530,8 @@ class AutoClick:
                         for ship_id in [828,40,9,8,1,20]:
                             if self.ships_by_id[ship_id]['api_cond']<53:
                                 self.mission='1-1'
-                                self.need_exp-={2}
+                                self.need_exp-={1}
+                                self.check_stype()
                                 break
                 for api_id in deck['api_ship']:
                     if api_id < 0:
@@ -646,19 +646,19 @@ class AutoClick:
                 self.update_data()
                 if self.need_supply:
                     self.supply()
-                elif self.need_exp:
-                    self.send_exps()
                 elif self.need_repair:
                     self.repair()
                 elif self.need_replace:
                     self.change_ship()
+                elif self.need_check_stype:
+                    self.check_stype()
+                    self.need_check_stype = False
+                elif self.need_exp:
+                    self.send_exps()
                 elif self.new_argv:
                     self.mission = self.new_argv
                     self.check_stype()
                     self.new_argv = ''
-                elif self.need_check_stype:
-                    self.check_stype()
-                    self.need_check_stype = False
                 elif self.mission == 'exp':
                     if self.min_expdition_time > time.time() - 60:
                         print time.strftime("next click: %H:%M:%S", time.localtime(self.min_expdition_time + 60))
@@ -671,6 +671,7 @@ class AutoClick:
                         sleep(3)
                         self.go_main()
                 elif self.mission:
+                    print self.mission
                     if self.max_repair_time > time.time() - 60:
                         print time.strftime("next click: %H:%M:%S", time.localtime(self.max_repair_time + 60))
                         while self.max_repair_time > time.time():
@@ -683,6 +684,8 @@ class AutoClick:
                             self.go_main()
                     else:
                         self.launch()
+                else:
+                    print self.mission
             sleep(1)
 
 if __name__ == '__main__':
