@@ -20,7 +20,7 @@ class winMouse():
  
 	def click(self,posx,posy):
 		self.move(posx+self.offset_x,posy+self.offset_y)
-		sleep(0.05)
+		sleep(0.01)
 		win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
 		win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
 		
