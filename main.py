@@ -283,14 +283,12 @@ class AutoClick:
 
     def supply(self):
         mouse.click(*POS_SUPPLY)
-        sleep(1)
-        screen = self.screen.shot()
-        while (screen[POS_SUPPLY1] == GRAY).all():
+        sleep(2)
+        while (self.screen.shot()[POS_SUPPLY1] == GRAY).all():
             mouse.click(*POS_SUPPLY1)
-            sleep(2)
+            sleep(1)
             mouse.click(*POS_SUPPLY2)
             sleep(3)
-            screen = self.screen.shot()
         # if argv!='exp' and match(screen,"broken.bmp"):
         # 	mail.sendmail(['lanhao34@gmail.com'],"大破警告","大破警告")
         # 	argv='exp'
@@ -323,7 +321,7 @@ class AutoClick:
             sleep(1)
             while self.server.time < click_time and self.server.path != '/kcsapi/api_get_member/deck':
                 sleep(1)
-            sleep(5)
+            sleep(8)
         mouse.click(*POS_ATTACK)
         sleep(1)
         mouse.click(*POS_GO_EXP)
@@ -350,8 +348,9 @@ class AutoClick:
         mouse.click(*POS_REPAIR)
         while self.server.path != '/kcsapi/api_get_member/ndock' or self.server.time < click_time:
             sleep(1)
+        sleep(1)
         for ship_index, dock in self.need_repair:
-            sleep(1)
+            sleep(3)
             page = ship_index / 10
             row = ship_index % 10
             mouse.click(*POS_DOCK[dock])
@@ -375,11 +374,11 @@ class AutoClick:
 
     def change_ship(self):
         mouse.click(200, 135)
-        sleep(1.5)
-        mouse.click(*POS_CHANGE_TEAM[self.change_ship_team])
-        sleep(1.5)
-        if self.need_clear:
+        sleep(2)
+        if self.change_ship_team!=0:
+            mouse.click(*POS_CHANGE_TEAM[self.change_ship_team])
             sleep(1)
+        if self.need_clear:
             click_time = time.time()
             mouse.click(415, 120)
             if self.ship_team[self.change_ship_team][1] != -1:
@@ -387,7 +386,7 @@ class AutoClick:
                     sleep(1)
         sleep(1)
         for i, ship_index in self.need_replace:
-            sleep(1)
+            sleep(3)
             page = ship_index / 10
             row = ship_index % 10
             mouse.click(*POS_CHANGE_SHIP[i])
@@ -457,6 +456,8 @@ class AutoClick:
         elif self.mission in sortie.keys():
             id_lists=sortie[self.mission]["id_lists"]
         else:
+            return False
+        if not id_lists:
             return False
         for i, id_list in enumerate(id_lists):
             if self.ship_team[team][i] == -1 or self.ship_team[team][i] not in id_list:
@@ -606,10 +607,9 @@ class AutoClick:
                 id_list = sortie[self.mission]["id_lists"][i]
                 for ship_id in id_list:
                     ship = self.ships_by_id[ship_id]
-                    if ship_id not in self.ship_team[0] and ship['index'] not in set(x[1] for x in self.need_replace):
+                    if ship_id not in set(self.ship_team[0]) | set(ship_in_dock) and ship['index'] not in set(x[1] for x in self.need_replace):
                         if ship['api_maxhp'] >= ship['api_nowhp'] * 2 or (ship['api_cond'] < 33 and ship['api_ndock_time'] > 0):
-                            if ship_id not in ship_in_dock:
-                                need_repair.add(ship['index'])
+                            need_repair.add(ship['index'])
                         elif tmp_cond < ship['api_cond'] and (ship['api_cond'] > self.ships_by_id[self.ship_team[0][i]]['api_cond'] or self.ship_team[0][i] in ship_in_dock):
                             tmp_cond = ship['api_cond']
                             tmp_index = ship['index']
