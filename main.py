@@ -600,7 +600,13 @@ class AutoClick:
                     self.max_repair_time, dock['api_complete_time'] / 1000)
 
         self.need_replace = []
-        if self.mission in ('3-2', '2-3'):
+        if self.mission == '1-1':
+            if self.ships_by_id[self.ship_team[0][0]]['api_cond']>75 or need_replace or self.ship_team[0][0] not in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
+                for ship_id in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
+                    if ship_id not in ship_in_dock and self.ships_by_id[ship_id]['api_cond']<=75:
+                        self.need_replace=[[0,self.ships_by_id[ship_id]['index']]]
+                        break
+        elif self.mission in sortie.keys() and sortie[self.mission]["id_lists"]:
             for i in need_replace:
                 tmp_index = None
                 tmp_cond = 0
@@ -621,12 +627,7 @@ class AutoClick:
                         if self.max_repair_time>dock['api_complete_time']>0:
                             self.max_repair_time=dock['api_complete_time']
 
-        elif self.mission == '1-1':
-            if self.ships_by_id[self.ship_team[0][0]]['api_cond']>75 or need_replace or self.ship_team[0][0] not in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
-                for ship_id in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
-                    if ship_id not in ship_in_dock and self.ships_by_id[ship_id]['api_cond']<=75:
-                        self.need_replace=[[0,self.ships_by_id[ship_id]['index']]]
-                        break
+        
         wait_time = self.max_repair_time - now_time
         if wait_time > 0 and not self.need_replace:
             for ship_id in set(self.ship_team[0]) - {-1} - ship_in_dock:
