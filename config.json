@@ -1,5 +1,6 @@
 {
-    "check_condition": true,
+    "check_condition": [0,1,2,3,4,5],
+    "repair_hp_percent": 0.5,
     "expedition": [
         [0, 0],
         [0, 0],
@@ -7,7 +8,7 @@
     ],
     "exp_id_lists": {
         "1,5": {
-            "need_flash": true,
+            "need_flash": 4,
             "id_lists": [
                 [22],
                 [373],
@@ -16,7 +17,7 @@
             ]
         },
         "3,4": {
-            "need_flash": true,
+            "need_flash": 5,
             "id_lists": [
                 [70],
                 [9],
@@ -26,7 +27,7 @@
             ]
         },
         "5,5": {
-            "need_flash": true,
+            "need_flash": 6,
             "id_lists": [
                 [828],
                 [70],
@@ -37,7 +38,7 @@
             ]
         },
         "5,6": {
-            "need_flash": true,
+            "need_flash": 6,
             "id_lists": [
                 [828],
                 [30],

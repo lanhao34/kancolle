@@ -618,22 +618,19 @@ class AutoClick:
 
             if ship_id in ship_in_dock:
                 need_replace.add(i)
-            elif self.mission=='3-2' and ship_id in self.stype[13]:
-                if ship['api_maxhp'] * 0.26 >= ship['api_nowhp']:
+            elif self.mission=='3-2':
+                if ship_id in self.stype[13] and ship['api_maxhp'] * 0.26 >= ship['api_nowhp']:
                     need_repair.add(ship['index'])
                     need_replace.add(i)
-            elif ship['api_cond'] < 33:
+            if ship['api_cond'] < 33 and i in config['check_condition']:
                 need_replace.add(i)
                 self.max_repair_time = max(
                     self.max_repair_time, now_time + (33 - ship['api_cond']) / 3 * 180 + 180)
                 if ship['api_ndock_time'] > 0:
                     need_repair.add(ship['index'])
-            elif ship['api_maxhp'] * config['repair_hp_percent']>= ship['api_nowhp']:
+            if ship['api_maxhp'] * config['repair_hp_percent']>= ship['api_nowhp']:
                 need_repair.add(ship['index'])
                 need_replace.add(i)
-
-        if not config['check_condition']:
-            self.max_repair_time = now_time
 
         for dock in port_api_data['api_ndock']:
             if dock['api_ship_id'] in self.ship_team[team]:
