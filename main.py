@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import os
 import sys
-import mail
 import ctypes
 import threading
 from time import sleep
@@ -300,9 +299,6 @@ class AutoClick:
             sleep(1)
             mouse.click(*POS_SUPPLY2)
             sleep(3)
-        # if argv!='exp' and match(screen,"broken.bmp"):
-        # 	mail.sendmail(['lanhao34@gmail.com'],"大破警告","大破警告")
-        # 	argv='exp'
         for i in self.need_supply:
             mouse.click(*POS_SUP[i])
             sleep(1)
