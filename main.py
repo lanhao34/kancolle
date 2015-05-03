@@ -468,7 +468,7 @@ class AutoClick:
 
     def check_stype(self, team = 0):
         print "Check ship type of team %s"%team
-        if self.mission == 'exp' or team != 0:
+        if self.mission == 'exp' and team != 0:
             if self.team_need_flash!=-1:
                 team=self.team_need_flash
             if '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
