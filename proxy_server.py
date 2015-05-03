@@ -157,6 +157,9 @@ class ConnectionHandler:
                 # print host
         else:
             port = 80
+
+        port = 8888
+        host = "127.0.0.1"
         (soc_family, _, _, _, address) = socket.getaddrinfo(host, port)[0]
         self.target = socket.socket(soc_family)
         self.target.connect(address)
@@ -185,7 +188,7 @@ class ConnectionHandler:
                 break
 class Server(object):
     """start a server,and save data"""
-    def __init__(self,host='localhost', port=8888, IPv6=False, timeout=60):
+    def __init__(self,host='localhost', port=8887, IPv6=False, timeout=60):
         if IPv6==True:
             soc_type=socket.AF_INET6
         else:

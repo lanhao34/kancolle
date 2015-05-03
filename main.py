@@ -171,7 +171,6 @@ class AutoClick:
 
         self.stype = dict((key, [ship['api_sortno'] for ship in group]) for key, group in groupby(sorted(self.server.data[
                           '/kcsapi/api_start2']['api_data']['api_mst_ship'], key=itemgetter('api_stype')), key=itemgetter('api_stype')))
-
         self.ships_by_sortno = dict((ship['api_sortno'], ship) for ship in self.server.data[
                                     '/kcsapi/api_start2']['api_data']['api_mst_ship'])
         return pos[1] - 440, pos[1] + 40, pos[0] - 764, pos[0] + 36
@@ -476,11 +475,10 @@ class AutoClick:
         if self.mission == 'exp' and team!=0:
             if self.team_need_flash!=-1:
                 team=self.team_need_flash
-                id_lists=self.ships_need_flash
-            elif '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
-                id_lists=config['exp_id_lists']['%s,%s'%exps[team-1]]['id_lists']
-            else:
-                return False
+                if '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
+                    id_lists=config['exp_id_lists']['%s,%s'%exps[team-1]]['id_lists']
+                else:
+                    id_lists=self.ships_need_flash
         elif self.team_need_flash!=-1 and self.mission == '1-1':
             team=self.team_need_flash
             id_lists=[flat(self.ships_need_flash)]
@@ -514,7 +512,7 @@ class AutoClick:
                 tmp_cond = 0
                 for ship_id in id_list:
                     ship = self.ships_by_id[ship_id]
-                    if ship_id not in set(self.ship_team[team]) and ship['index'] not in set(x[1] for x in self.need_replace):
+                    if ship['index'] not in set(x[1] for x in self.need_replace):
                         if tmp_cond < ship['api_cond']:
                             tmp_cond = ship['api_cond']
                             tmp_index = ship['index']
@@ -591,7 +589,8 @@ class AutoClick:
                             self.mission='1-1'
                             self.need_exp-={i}
                             self.team_need_flash=i+1
-                            self.ships_need_flash=config['exp_id_lists']['%s,%s'%exps[self.team_need_flash-1]]['id_lists']
+                            exp_config=config['exp_id_lists']['%s,%s'%exps[self.team_need_flash-1]]
+                            self.ships_need_flash=exp_config['id_lists'][:exp_config['need_flash']]
                             print "Change into flash mode! Team %s"%self.team_need_flash
                             if self.check_stype(self.team_need_flash):
                                 return True
@@ -619,13 +618,17 @@ class AutoClick:
 
             if ship_id in ship_in_dock:
                 need_replace.add(i)
+            elif self.mission=='3-2' and ship_id in self.stype[13]:
+                if ship['api_maxhp'] * 0.26 >= ship['api_nowhp']:
+                    need_repair.add(ship['index'])
+                    need_replace.add(i)
             elif ship['api_cond'] < 33:
                 need_replace.add(i)
                 self.max_repair_time = max(
                     self.max_repair_time, now_time + (33 - ship['api_cond']) / 3 * 180 + 180)
                 if ship['api_ndock_time'] > 0:
                     need_repair.add(ship['index'])
-            elif ship['api_maxhp'] >= ship['api_nowhp'] * 2:
+            elif ship['api_maxhp'] * config['repair_hp_percent']>= ship['api_nowhp']:
                 need_repair.add(ship['index'])
                 need_replace.add(i)
 
