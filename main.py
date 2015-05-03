@@ -619,7 +619,7 @@ class AutoClick:
             if ship_id in ship_in_dock:
                 need_replace.add(i)
             elif self.mission=='3-2':
-                if ship_id in self.stype[13] and ship['api_maxhp'] * 0.26 >= ship['api_nowhp']:
+                if ship['api_sortno'] in self.stype[13] and ship['api_maxhp'] * 0.26 >= ship['api_nowhp']:
                     need_repair.add(ship['index'])
                     need_replace.add(i)
             elif ship['api_maxhp'] * config['repair_hp_percent']>= ship['api_nowhp']:
