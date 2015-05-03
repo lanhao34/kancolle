@@ -258,7 +258,7 @@ class AutoClick:
                         self.go_main()
                         return
                     # 327,202
-                if match(screen, "next_1.bmp", threshold=500000):
+                if match(screen, "next_1.bmp", threshold=600000):
                     mouse.click(*POS_GO)
                     flag = 2
                 sleep(1)
