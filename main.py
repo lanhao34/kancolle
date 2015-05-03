@@ -139,7 +139,7 @@ class AutoClick:
         thread.start_new_thread(self.server.start, ())
         self.suspended = False
         self.new_argv = ''
-        self.flash_cond = 85
+        self.flash_cond = config['exp_flash_cond']
         self.team_need_flash = -1
         self.mission = 'exp'
         if len(sys.argv) > 1:
@@ -314,11 +314,12 @@ class AutoClick:
         def send_exp(team, PAGE, mission):
             if PAGE == 0 or mission == 0:
                 return
-            while not match(self.screen.shot(), 'decision.bmp'):
-                mouse.click(*POS_EXP_PAGE[PAGE - 1])
+            while not match(self.screen.shot(),'exp.bmp'):
                 sleep(1)
-                mouse.click(*POS_EXP_MISSION[mission - 1])
-                sleep(1)
+            mouse.click(*POS_EXP_PAGE[PAGE - 1])
+            sleep(1)
+            mouse.click(*POS_EXP_MISSION[mission - 1])
+            sleep(1)
             mouse.click(*POS_GO)
             sleep(1)
             mouse.click(*POS_EXP_TEAM[team])
@@ -328,11 +329,13 @@ class AutoClick:
             sleep(1)
             while self.server.time < click_time and self.server.path != '/kcsapi/api_get_member/deck':
                 sleep(1)
-            sleep(8)
+            while not match(self.screen.shot(),'exp.bmp'):
+                sleep(1)
+            sleep(5)
         mouse.click(*POS_ATTACK)
         sleep(1)
         mouse.click(*POS_GO_EXP)
-        sleep(3)
+        sleep(1)
         for exp in set(self.need_exp):
             send_exp(exp, *exps[exp])
         self.need_exp.clear()

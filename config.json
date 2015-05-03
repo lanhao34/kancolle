@@ -1,10 +1,11 @@
 {
     "check_condition": [1],
     "repair_hp_percent": 0.5,
+    "exp_flash_cond": 70,
     "expedition": [
-        [0, 0],
-        [0, 0],
-        [0, 0]
+        [1, 2],
+        [1, 5],
+        [3, 4]
     ],
     "exp_id_lists": {
         "1,5": {
