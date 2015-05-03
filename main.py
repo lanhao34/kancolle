@@ -140,10 +140,18 @@ class AutoClick:
         thread.start_new_thread(self.server.start, ())
         self.suspended = False
         self.new_argv = ''
+        self.flash_cond = 85
+        self.team_need_flash = -1
+        self.mission = 'exp'
         if len(sys.argv) > 1:
             self.mission = sys.argv[1]
-        else:
-            self.mission = 'exp'
+            self.team_need_flash = 0
+            if len(sys.argv) > 2:
+                self.team_need_flash = int(sys.argv[2])-1
+                if len(sys.argv) > 3:
+                    self.flash_cond = int(sys.argv[3])            
+        self.old_mission = 'exp'
+        self.ships_need_flash = []
         self.min_expdition_time = 0
         # self.t=threading.Thread(target=self.main)
         # self.t.setDaemon(True)
@@ -170,20 +178,24 @@ class AutoClick:
 
     def launch(self):
         mouse.click(*POS_ATTACK)
-        sleep(1)
+        sleep(2)
         mouse.click(*POS_ATTACK)
         sleep(1)
         while not match(self.screen.shot(), "1_5.bmp"):
             sleep(1)
-        self.sortie(*[int(x) for x in self.mission.split('-')])
+        self.sortie(*[x for x in self.mission.split('-')])
         mouse.click(*POS_GO)
         sleep(1)
-        screen = self.screen.shot()
-        if match(screen, "orange.bmp") or match(screen, "red.bmp") or match(screen, "repair.bmp") or match(screen, "broken.bmp"):
-            print "tired!"
-            sleep(300)
-            self.go_main()
-            return False
+
+        if self.mission=='1-1' and self.team_need_flash > 0:
+            mouse.click(*POS_EXP_TEAM[self.team_need_flash-1])
+            sleep(1)
+        # screen = self.screen.shot()
+        # if match(screen, "orange.bmp") or match(screen, "red.bmp") or match(screen, "repair.bmp") or match(screen, "broken.bmp"):
+        #     print "tired!"
+        #     sleep(300)
+        #     self.go_main()
+        #     return False
 
         mouse.click(*POS_GO)
 
@@ -333,15 +345,28 @@ class AutoClick:
         self.go_main()
 
     def sortie(self, PAGE, mission):
-        mouse.click(80 + 75 * PAGE, 440)
-        sleep(1)
-        if mission == 5:
-            mouse.click(*POS_1_5)
+        if PAGE.upper()!='E':        
+            PAGE=int(PAGE)
+            mission=int(mission)
+            mouse.click(80 + 75 * PAGE, 440)
             sleep(1)
-            mouse.click(*POS_1_5)
+            if mission == 5:
+                mouse.click(*POS_1_5)
+                sleep(1)
+                mouse.click(*POS_1_5)
+            else:
+                mouse.click(*POS_SORTIE[mission - 1])
+            sleep(1)
         else:
-            mouse.click(*POS_SORTIE[mission - 1])
-        sleep(1)
+            mission=int(mission)
+            mouse.click(715, 440)
+            sleep(1)
+            # if mission > 4:
+            #     mouse.click
+            while not match(self.screen.shot(), "decision.bmp"):
+                mouse.click(555,95 + 72 * mission)
+                sleep(2)
+
 
     def repair(self):
         click_time = time.time()
@@ -361,7 +386,7 @@ class AutoClick:
             self.click_page(page)
             mouse.click(600, 138 + row * 31)
             sleep(1)
-            if self.mission not in {'3-2','2-3','exp'}:
+            if self.ships[ship_index]['api_ndock_time'] > 3600000:
                 mouse.click(*POS_FAST_REPAIR)
                 sleep(1)
             mouse.click(*POS_GO)
@@ -448,11 +473,17 @@ class AutoClick:
 
     def check_stype(self, team = 0):
         print "Check ship type of team %s"%team
-
-        if self.mission == '1-1' and self.need_flash!=0:
-            id_lists=[flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]["id_lists"])]
-        elif team!=0 and '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
-            id_lists=config['exp_id_lists']['%s,%s'%exps[team-1]]["id_lists"]
+        if self.mission == 'exp' and team!=0:
+            if self.team_need_flash!=-1:
+                team=self.team_need_flash
+                id_lists=self.ships_need_flash
+            elif '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
+                id_lists=config['exp_id_lists']['%s,%s'%exps[team-1]]['id_lists']
+            else:
+                return False
+        elif self.team_need_flash!=-1 and self.mission == '1-1':
+            team=self.team_need_flash
+            id_lists=[flat(self.ships_need_flash)]
         elif self.mission in sortie.keys():
             id_lists=sortie[self.mission]["id_lists"]
         else:
@@ -460,39 +491,39 @@ class AutoClick:
         if not id_lists:
             return False
         for i, id_list in enumerate(id_lists):
+            if not id_list:
+                continue
             if self.ship_team[team][i] == -1 or self.ship_team[team][i] not in id_list:
                 print self.ship_team[team][i],id_list
-                self.change_all_ship(team)
+                self.change_all_ship(team,id_lists)
                 return True
         if i!=5 and self.ship_team[team][i+1] != -1:
-            self.change_all_ship(team)
+            self.change_all_ship(team,id_lists)
             return True
         return False
 
-    def change_all_ship(self, team = 0):
+    def change_all_ship(self, team, id_lists):
         self.need_replace = []
         self.need_clear = True
-        if self.mission == '1-1' and self.need_flash!=0:
-            self.need_replace = [[0,self.ships_by_id[config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists'][0][0]]['index']]]
-        elif team!=0:
-            self.change_ship_team = team
-            for i,ship_id in enumerate(flat(config['exp_id_lists']['%s,%s'%exps[team-1]]['id_lists'])):
-                self.need_replace.append([i,self.ships_by_id[ship_id]['index']])
+        self.change_ship_team = team
+        if self.mission == '1-1' and self.team_need_flash!=-1:
+            self.need_replace = [[0,self.ships_by_id[id_lists[0][0]]['index']]]
         else:
-            for i, id_list in enumerate(sortie[self.mission]["id_lists"]):
+            for i, id_list in enumerate(id_lists):
                 tmp_index = -1
                 tmp_cond = 0
                 for ship_id in id_list:
                     ship = self.ships_by_id[ship_id]
-                    if ship_id not in set(self.ship_team[0]) and ship['index'] not in set(x[1] for x in self.need_replace):
+                    if ship_id not in set(self.ship_team[team]) and ship['index'] not in set(x[1] for x in self.need_replace):
                         if tmp_cond < ship['api_cond']:
                             tmp_cond = ship['api_cond']
                             tmp_index = ship['index']
                 if tmp_index != -1:
                     self.need_replace.append([i, tmp_index])
        
-        if self.ships[self.need_replace[0][1]]['api_id'] == self.ship_team[self.change_ship_team][0]:
+        if self.ships[self.need_replace[0][1]]['api_id'] == self.ship_team[team][0]:
             self.need_replace = self.need_replace[1:]
+        print self.need_replace
         self.change_ship()
             
     def click_page(self, page):
@@ -556,28 +587,32 @@ class AutoClick:
                 for id_list in config['exp_id_lists']['%s,%s'%exps[i]]['id_lists']:
                     for ship_id in id_list:
                         if self.mission!='1-1' and self.ships_by_id[ship_id]['api_cond']<53:
+                            self.old_mission=self.mission
                             self.mission='1-1'
                             self.need_exp-={i}
-                            self.need_flash=i+1
-                            print "Change into flash mode! Team %s"%self.need_flash
-                            if self.check_stype():
+                            self.team_need_flash=i+1
+                            self.ships_need_flash=config['exp_id_lists']['%s,%s'%exps[self.team_need_flash-1]]['id_lists']
+                            print "Change into flash mode! Team %s"%self.team_need_flash
+                            if self.check_stype(self.team_need_flash):
                                 return True
-                        elif self.mission=='1-1' and self.ships_by_id[ship_id]['api_cond']<75:
+                        elif self.mission=='1-1' and self.ships_by_id[ship_id]['api_cond']<self.flash_cond:
                             self.need_exp-={i}
                             break
-                if i in self.need_exp:
-                    if self.mission=='1-1':
-                        for id_list in config['exp_id_lists']['%s,%s'%exps[i]]['id_lists']:
-                            if self.ship_team[0][0] in id_list:
-                                self.need_replace=[[0,self.ships_by_id[config['akashi']]['index']]]
-                                return False
-                        self.mission = 'exp'
-                        print "Change into expedition mode!"
-                    if self.check_stype(i+1):
-                        return True
-
-
-        for i, ship_id in enumerate(self.ship_team[0]):
+        for i in self.need_exp:
+            if self.check_stype(i+1):
+                break
+        if self.mission == 'flash':
+            self.ships_need_flash = [[ship] for ship in self.ship_team[self.team_need_flash] if ship!=-1]
+            self.mission = '1-1'
+            self.old_mission = 'exp'
+            if self.check_stype(self.team_need_flash):
+                return True
+        if self.team_need_flash!=-1:
+            team = self.team_need_flash
+            self.change_ship_team = self.team_need_flash
+        else:
+            team = 0
+        for i, ship_id in enumerate(self.ship_team[team]):
             if ship_id == -1:
                 break
             ship = self.ships_by_id[ship_id]
@@ -594,35 +629,47 @@ class AutoClick:
                 need_repair.add(ship['index'])
                 need_replace.add(i)
 
+        if not config['check_condition']:
+            self.max_repair_time = now_time
+
         for dock in port_api_data['api_ndock']:
-            if dock['api_ship_id'] in self.ship_team[0]:
+            if dock['api_ship_id'] in self.ship_team[team]:
                 self.max_repair_time = max(
                     self.max_repair_time, dock['api_complete_time'] / 1000)
 
         self.need_replace = []
         if self.mission == '1-1':
-            if self.ships_by_id[self.ship_team[0][0]]['api_cond']>75 or need_replace or self.ship_team[0][0] not in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
-                for ship_id in flat(config['exp_id_lists']['%s,%s'%exps[self.need_flash-1]]['id_lists']):
-                    if ship_id not in ship_in_dock and self.ships_by_id[ship_id]['api_cond']<=75:
+            if self.ships_by_id[self.ship_team[team][0]]['api_cond']>=self.flash_cond:
+                for ship_id in flat(self.ships_need_flash):
+                    if ship_id not in ship_in_dock and self.ships_by_id[ship_id]['api_cond']<self.flash_cond:
                         self.need_replace=[[0,self.ships_by_id[ship_id]['index']]]
                         break
+                if not self.need_replace:
+                    self.mission = self.old_mission
+                    print "Change into expedition mode!"
+                    if self.check_stype(self.team_need_flash):
+                        self.team_need_flash = -1
+                        self.ships_need_flash = []
+                        return True
         elif self.mission in sortie.keys() and sortie[self.mission]["id_lists"]:
             for i in need_replace:
                 tmp_index = None
                 tmp_cond = 0
+                if i >= len(sortie[self.mission]["id_lists"]):
+                    break
                 id_list = sortie[self.mission]["id_lists"][i]
                 for ship_id in id_list:
                     ship = self.ships_by_id[ship_id]
-                    if ship_id not in set(self.ship_team[0]) | set(ship_in_dock) and ship['index'] not in set(x[1] for x in self.need_replace):
+                    if ship_id not in set(self.ship_team[team]) | set(ship_in_dock) and ship['index'] not in set(x[1] for x in self.need_replace):
                         if ship['api_maxhp'] >= ship['api_nowhp'] * 2 or (ship['api_cond'] < 33 and ship['api_ndock_time'] > 0):
                             need_repair.add(ship['index'])
-                        elif tmp_cond < ship['api_cond'] and (ship['api_cond'] > self.ships_by_id[self.ship_team[0][i]]['api_cond'] or self.ship_team[0][i] in ship_in_dock):
+                        elif tmp_cond < ship['api_cond'] and (ship['api_cond'] > self.ships_by_id[self.ship_team[team][i]]['api_cond'] or self.ship_team[0][i] in ship_in_dock):
                             tmp_cond = ship['api_cond']
                             tmp_index = ship['index']
                 if tmp_index != None:
                     self.need_replace.append([i, tmp_index])
                 else:
-                    self.max_repair_time = time.time() + 300
+                    # self.max_repair_time = time.time() + 300
                     for dock in port_api_data['api_ndock']:
                         if self.max_repair_time>dock['api_complete_time']>0:
                             self.max_repair_time=dock['api_complete_time']
@@ -630,7 +677,7 @@ class AutoClick:
         
         wait_time = self.max_repair_time - now_time
         if wait_time > 0 and not self.need_replace:
-            for ship_id in set(self.ship_team[0]) - {-1} - ship_in_dock:
+            for ship_id in set(self.ship_team[team]) - {-1} - ship_in_dock:
                 if 0 < self.ships_by_id[ship_id]['api_ndock_time'] / 1000 < wait_time:
                     need_repair.add(self.ships_by_id[ship_id]['index'])
 
@@ -666,7 +713,6 @@ class AutoClick:
         mouse.setoffset(self.box[2], self.box[0])
         self.need_supply = set()
         self.need_exp = set()
-        self.need_flash = -1
         self.need_repair = []
         self.need_replace = []
         self.need_check_stype = True
