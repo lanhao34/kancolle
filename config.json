@@ -1,5 +1,5 @@
 {
-    "check_condition": [0,1,2,3,4,5],
+    "check_condition": [1],
     "repair_hp_percent": 0.5,
     "expedition": [
         [0, 0],
@@ -84,7 +84,7 @@
             "advance": false,
             "formation": "LINE_AHEAD",
             "id_lists": [
-                [4214],
+                [4423],
                 [338,125,240,50,252,2039,1401,1507,100,114,2407],
                 [4227],
                 [4230],
