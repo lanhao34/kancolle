@@ -144,7 +144,6 @@ class AutoClick:
         self.mission = 'exp'
         if len(sys.argv) > 1:
             self.mission = sys.argv[1]
-            self.team_need_flash = 0
             if len(sys.argv) > 2:
                 self.team_need_flash = int(sys.argv[2])-1
                 if len(sys.argv) > 3:
@@ -331,7 +330,7 @@ class AutoClick:
                 sleep(1)
             while not match(self.screen.shot(),'exp.bmp'):
                 sleep(1)
-            sleep(5)
+            sleep(3)
         mouse.click(*POS_ATTACK)
         sleep(1)
         mouse.click(*POS_GO_EXP)
@@ -471,17 +470,19 @@ class AutoClick:
 
     def check_stype(self, team = 0):
         print "Check ship type of team %s"%team
-        if self.mission == 'exp' and team != 0:
-            if self.team_need_flash!=-1:
-                team=self.team_need_flash
+        print self.team_need_flash
+        if self.team_need_flash!=-1:
+            team=self.team_need_flash
+            if self.mission == '1-1':
+                id_lists=[flat(self.ships_need_flash)]
+            else:
+                id_lists=self.ships_need_flash
+        elif team != 0:
             if '%s,%s'%exps[team-1] in config['exp_id_lists'].keys():
                 id_lists=config['exp_id_lists']['%s,%s'%exps[team-1]]['id_lists']
             else:
                 id_lists=self.ships_need_flash
-        elif self.team_need_flash!=-1 and self.mission == '1-1':
-            team=self.team_need_flash
-            id_lists=[flat(self.ships_need_flash)]
-        elif self.mission in sortie.keys():
+        elif team == 0 and self.mission in sortie.keys():
             id_lists=sortie[self.mission]["id_lists"]
         else:
             return False
@@ -581,14 +582,16 @@ class AutoClick:
 
         for i in list(self.need_exp):
             if '%s,%s'%exps[i] in config['exp_id_lists'].keys():
-                for id_list in config['exp_id_lists']['%s,%s'%exps[i]]['id_lists']:
+                exp_config=config['exp_id_lists']['%s,%s'%exps[i]]
+                if not exp_config['need_flash']:
+                    continue
+                for id_list in exp_config['id_lists']:
                     for ship_id in id_list:
                         if self.mission!='1-1' and self.ships_by_id[ship_id]['api_cond']<53:
                             self.old_mission=self.mission
                             self.mission='1-1'
                             self.need_exp-={i}
                             self.team_need_flash=i+1
-                            exp_config=config['exp_id_lists']['%s,%s'%exps[self.team_need_flash-1]]
                             self.ships_need_flash=exp_config['id_lists'][:exp_config['need_flash']]
                             print "Change into flash mode! Team %s"%self.team_need_flash
                             if self.check_stype(self.team_need_flash):
