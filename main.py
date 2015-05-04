@@ -176,10 +176,9 @@ class AutoClick:
     def launch(self):
         mouse.click(*POS_ATTACK)
         sleep(2)
-        mouse.click(*POS_ATTACK)
-        sleep(1)
         while not match(self.screen.shot(), "1_5.bmp"):
-            sleep(1)
+            mouse.click(*POS_ATTACK)
+            sleep(2)
         self.sortie(*[x for x in self.mission.split('-')])
         mouse.click(*POS_GO)
         sleep(1)
@@ -330,15 +329,14 @@ class AutoClick:
                 sleep(1)
             while not match(self.screen.shot(),'exp.bmp'):
                 sleep(1)
-            sleep(3)
+            sleep(5)
         mouse.click(*POS_ATTACK)
-        sleep(1)
+        sleep(2)
         mouse.click(*POS_GO_EXP)
         sleep(1)
         for exp in set(self.need_exp):
             send_exp(exp, *exps[exp])
         self.need_exp.clear()
-        sleep(3)
         self.go_main()
 
     def sortie(self, PAGE, mission):
@@ -375,8 +373,9 @@ class AutoClick:
             sleep(3)
             page = ship_index / 10
             row = ship_index % 10
-            mouse.click(*POS_DOCK[dock])
-            sleep(1)
+            while not match(self.screen.shot(), "select_ship.bmp"):
+                mouse.click(*POS_DOCK[dock])
+                sleep(1)
             while not match(self.screen.shot(), "new.bmp"):
                 mouse.click(*POS_CHANGE_SORT)
                 sleep(0.2)
@@ -411,8 +410,9 @@ class AutoClick:
             sleep(3)
             page = ship_index / 10
             row = ship_index % 10
-            mouse.click(*POS_CHANGE_SHIP[i])
-            sleep(1)
+            while not match(self.screen.shot(), "select_ship.bmp"):
+                mouse.click(*POS_CHANGE_SHIP[i])
+                sleep(1)
             while not match(self.screen.shot(), "new.bmp"):
                 mouse.click(*POS_CHANGE_SORT)
                 sleep(0.2)
