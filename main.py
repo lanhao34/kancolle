@@ -591,7 +591,7 @@ class AutoClick:
                             self.mission='1-1'
                             self.need_exp-={i}
                             self.team_need_flash=i+1
-                            self.ships_need_flash=
+                            self.ships_need_flash=id_lists
                             print "Change into flash mode! Team %s"%self.team_need_flash
                             if self.check_stype(self.team_need_flash):
                                 return True
