@@ -583,16 +583,15 @@ class AutoClick:
         for i in list(self.need_exp):
             if '%s,%s'%exps[i] in config['exp_id_lists'].keys():
                 exp_config=config['exp_id_lists']['%s,%s'%exps[i]]
-                if not exp_config['need_flash']:
-                    continue
-                for id_list in exp_config['id_lists']:
+                id_lists=exp_config['id_lists'][:exp_config['need_flash']]
+                for id_list in id_lists:
                     for ship_id in id_list:
                         if self.mission!='1-1' and self.ships_by_id[ship_id]['api_cond']<53:
                             self.old_mission=self.mission
                             self.mission='1-1'
                             self.need_exp-={i}
                             self.team_need_flash=i+1
-                            self.ships_need_flash=exp_config['id_lists'][:exp_config['need_flash']]
+                            self.ships_need_flash=
                             print "Change into flash mode! Team %s"%self.team_need_flash
                             if self.check_stype(self.team_need_flash):
                                 return True
@@ -601,7 +600,7 @@ class AutoClick:
                             break
         for i in self.need_exp:
             if self.check_stype(i+1):
-                break
+                return True
         if self.mission == 'flash':
             self.ships_need_flash = [[ship] for ship in self.ship_team[self.team_need_flash] if ship!=-1]
             self.mission = '1-1'
