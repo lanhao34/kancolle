@@ -107,13 +107,18 @@ class ConnectionHandler:
         self.target.close()
         data=self.data.split('svdata=')[-1]
         self.data=json.loads(data)
-        # if self.path == "/kcsapi/api_start2":
-        path=self.path[1:]+'.txt'
-        if not os.path.exists(os.path.split(path)[0]):
-            os.makedirs(os.path.split(path)[0])
-        f=open(path,'w')
-        f.write(data)
-        f.close()
+        if self.path:# == "/kcsapi/api_start2":
+            path=self.path[1:]+'.txt'
+            if not os.path.exists(os.path.split(path)[0]):
+                os.makedirs(os.path.split(path)[0])
+            str_data=json.dumps(self.data, indent=4, skipkeys=True)
+            with open(path,'r') as f:
+                old_data = f.read()
+            
+            if old_data!=str_data:
+                print "update api_data of " + self.path
+                with open(path, 'w') as f:
+                    f.write(str_data)
         # pprint(self.data)
         # print self.path
 
