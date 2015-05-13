@@ -92,11 +92,11 @@ VERSION = 'Python Proxy/'+__version__
 HTTPVER = 'HTTP/1.1'
 
 class ConnectionHandler:
-    def __init__(self, connection, address, timeout):
+    def __init__(self, connection, address):
         self.client = connection
         self.client_buffer = ''
         self.data = ''
-        self.timeout = timeout
+        self.timeout = 60
         self.method, self.path, self.protocol = self.get_base_header()
         if self.method=='CONNECT':
             self.method_CONNECT()
@@ -107,24 +107,12 @@ class ConnectionHandler:
         self.target.close()
         data=self.data.split('svdata=')[-1]
         self.data=json.loads(data)
-        if self.path:# == "/kcsapi/api_start2":
+        if self.path == "/kcsapi/api_start2":
             path=self.path[1:]+'.txt'
             if not os.path.exists(os.path.split(path)[0]):
                 os.makedirs(os.path.split(path)[0])
-            str_data=json.dumps(self.data, indent=4, skipkeys=True)
-            if not os.path.exists(path):
-                with open(path, 'w') as f:
-                    f.write(str_data)
-            else:
-                with open(path,'r') as f:
-                    old_data = f.read()
-                
-                if old_data!=str_data:
-                    # print "update api_data of " + self.path
-                    with open(path, 'w') as f:
-                        f.write(str_data)
-        # pprint(self.data)
-        # print self.path
+            with open(path, 'w') as f:
+                f.write(json.dumps(self.data, indent=4, skipkeys=True))
 
     def get_base_header(self):
         while 1:
@@ -197,7 +185,7 @@ class ConnectionHandler:
                 break
 class Server(object):
     """start a server,and save data"""
-    def __init__(self,host='localhost', port=8887, IPv6=False, timeout=60):
+    def __init__(self,host='localhost', port=8887, IPv6=False):
         if IPv6==True:
             soc_type=socket.AF_INET6
         else:
@@ -226,7 +214,7 @@ class Server(object):
         while 1:
             thread.start_new_thread(self.handler, self.soc.accept())
     def handler(self, conn, addr):
-        ch=ConnectionHandler(conn, addr, 60)
+        ch=ConnectionHandler(conn, addr)
         self.data[ch.path]=ch.data
         self.path=ch.path
         self.time=time.time()
