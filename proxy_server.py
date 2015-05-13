@@ -112,13 +112,17 @@ class ConnectionHandler:
             if not os.path.exists(os.path.split(path)[0]):
                 os.makedirs(os.path.split(path)[0])
             str_data=json.dumps(self.data, indent=4, skipkeys=True)
-            with open(path,'r') as f:
-                old_data = f.read()
-            
-            if old_data!=str_data:
-                print "update api_data of " + self.path
+            if not os.path.exists(path):
                 with open(path, 'w') as f:
                     f.write(str_data)
+            else:
+                with open(path,'r') as f:
+                    old_data = f.read()
+                
+                if old_data!=str_data:
+                    # print "update api_data of " + self.path
+                    with open(path, 'w') as f:
+                        f.write(str_data)
         # pprint(self.data)
         # print self.path
 
@@ -128,7 +132,7 @@ class ConnectionHandler:
             end = self.client_buffer.find('\n')
             if end!=-1:
                 break
-        print '%s'%self.client_buffer[:end]#debug
+        print 'POST %s'%self.client_buffer[35:end-9]#debug
         data = (self.client_buffer[:end+1]).split()
         self.client_buffer = self.client_buffer[end+1:]
         return data

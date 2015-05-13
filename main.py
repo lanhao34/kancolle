@@ -382,7 +382,7 @@ class AutoClick:
             self.click_page(page)
             mouse.click(600, 138 + row * 31)
             sleep(1)
-            if self.ships[ship_index]['api_ndock_time'] > 3600000:
+            if self.ships[ship_index]['api_ndock_time'] > 3600000 or self.mission == '1-1':
                 mouse.click(*POS_FAST_REPAIR)
                 sleep(1)
             mouse.click(*POS_GO)
@@ -585,17 +585,22 @@ class AutoClick:
                 exp_config=config['exp_id_lists']['%s,%s'%exps[i]]
                 id_lists=exp_config['id_lists'][:exp_config['need_flash']]
                 for id_list in id_lists:
-                    for ship_id in id_list:
-                        if self.mission!='1-1' and self.ships_by_id[ship_id]['api_cond']<53:
-                            self.old_mission=self.mission
-                            self.mission='1-1'
-                            self.need_exp-={i}
-                            self.team_need_flash=i+1
-                            self.ships_need_flash=id_lists
-                            print "Change into flash mode! Team %s"%self.team_need_flash
-                            if self.check_stype(self.team_need_flash):
-                                return True
-                        elif self.mission=='1-1' and self.ships_by_id[ship_id]['api_cond']<self.flash_cond:
+                    ship_id = id_list[0]
+                    if self.mission!='1-1' and self.ships_by_id[ship_id]['api_cond']<53:
+                        self.old_mission=self.mission
+                        self.mission='1-1'
+                        self.need_exp-={i}
+                        self.team_need_flash=i+1
+                        self.ships_need_flash=id_lists
+                        print "Change into flash mode! Team %s"%self.team_need_flash
+                        if self.check_stype(self.team_need_flash):
+                            return True
+                    elif self.mission=='1-1':
+                        if self.team_need_flash==i+1:
+                            if self.ships_by_id[ship_id]['api_cond']<self.flash_cond:
+                                self.need_exp-={i}
+                                break
+                        elif self.ships_by_id[ship_id]['api_cond']<53:
                             self.need_exp-={i}
                             break
         for i in self.need_exp:
@@ -742,9 +747,6 @@ class AutoClick:
                     self.repair()
                 elif self.need_replace:
                     self.change_ship()
-                elif self.need_check_stype:
-                    self.check_stype()
-                    self.need_check_stype = False
                 elif self.need_exp:
                     self.send_exps()
                 elif self.new_argv:
@@ -765,6 +767,9 @@ class AutoClick:
                         self.go_main()
                 elif self.mission:
                     print self.mission
+
+                    if self.check_stype():
+                        continue
                     if self.max_repair_time > time.time() - 60:
                         print time.strftime("next click: %H:%M:%S", time.localtime(self.max_repair_time + 60))
                         while self.max_repair_time > time.time():
